@@ -1,0 +1,176 @@
+CREATE DATABASE the_mall_of_lahore;
+USE the_mall_of_lahore;
+
+CREATE TABLE mall (
+    mall_id INT PRIMARY KEY AUTO_INCREMENT,
+    mall_name VARCHAR(100) NOT NULL,
+    location VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE shop_owner (
+    owner_id INT PRIMARY KEY AUTO_INCREMENT,
+    owner_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    phone VARCHAR(15)
+);
+
+CREATE TABLE customer (
+    customer_id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    phone VARCHAR(15)
+);
+
+CREATE TABLE category (
+    cat_id INT PRIMARY KEY AUTO_INCREMENT,
+    cat_name VARCHAR(50)
+);
+
+CREATE TABLE supplier (
+    sup_id INT PRIMARY KEY AUTO_INCREMENT,
+    sup_name VARCHAR(100),
+    contact VARCHAR(15)
+);
+
+CREATE TABLE users (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(50) NOT NULL,
+    role VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE error_logs (
+    log_id INT PRIMARY KEY AUTO_INCREMENT,
+    message TEXT,
+    log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE shop (
+    shop_id INT PRIMARY KEY AUTO_INCREMENT,
+    shop_name VARCHAR(100) NOT NULL,
+    floor_no INT NOT NULL,
+    owner_id INT,
+    FOREIGN KEY (owner_id) REFERENCES shop_owner(owner_id)
+);
+
+CREATE TABLE product (
+    product_id INT PRIMARY KEY AUTO_INCREMENT,
+    product_name VARCHAR(100) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    shop_id INT,
+    FOREIGN KEY (shop_id) REFERENCES shop(shop_id)
+);
+
+CREATE TABLE inventory (
+    product_id INT PRIMARY KEY,
+    quantity INT NOT NULL CHECK (quantity >= 0),
+    FOREIGN KEY (product_id) REFERENCES product(product_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_id INT,
+    order_date DATE,
+    total_amount DECIMAL(10,2),
+    FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
+);
+
+CREATE TABLE order_item (
+    order_item_id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id INT,
+    product_id INT,
+    quantity INT,
+    price DECIMAL(10,2),
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+    FOREIGN KEY (product_id) REFERENCES product(product_id)
+);
+
+CREATE TABLE employee (
+    emp_id INT PRIMARY KEY AUTO_INCREMENT,
+    emp_name VARCHAR(100),
+    designation VARCHAR(50),
+    salary DECIMAL(10,2)
+);
+
+CREATE TABLE maintenance (
+    m_id INT PRIMARY KEY AUTO_INCREMENT,
+    shop_id INT,
+    amount DECIMAL(10,2),
+    m_date DATE,
+    FOREIGN KEY (shop_id) REFERENCES shop(shop_id)
+);
+
+CREATE TABLE feedback (
+    f_id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_id INT,
+    comments TEXT,
+    rating INT,
+    FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
+);
+
+CREATE VIEW view_shop_sales AS
+SELECT s.shop_name, SUM(o.total_amount) total_sales
+FROM shop s
+JOIN product p ON s.shop_id = p.shop_id
+JOIN order_item oi ON p.product_id = oi.product_id
+JOIN orders o ON oi.order_id = o.order_id
+GROUP BY s.shop_name;
+
+CREATE VIEW view_inventory AS
+SELECT p.product_name, i.quantity
+FROM product p
+JOIN inventory i ON p.product_id = i.product_id;
+
+ALTER TABLE shop_owner AUTO_INCREMENT = 10;
+ALTER TABLE shop AUTO_INCREMENT = 10;
+ALTER TABLE product AUTO_INCREMENT = 20;
+ALTER TABLE customer AUTO_INCREMENT = 10;
+
+ALTER TABLE employee ADD COLUMN mall_id INT;
+ALTER TABLE employee ADD FOREIGN KEY (mall_id) REFERENCES mall(mall_id);
+
+ALTER TABLE product ADD COLUMN cat_id INT;
+ALTER TABLE product ADD FOREIGN KEY (cat_id) REFERENCES category(cat_id);
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'ADMIN');
+
+INSERT INTO shop_owner (owner_name, email, phone) VALUES
+('Ali Khan', 'ali.khan@gmail.com', '03001234567'),
+('Sara Ahmed', 'sara.ahmed@gmail.com', '03009876543'),
+('Usman Raza', 'usman.raza@gmail.com', '03005556666');
+
+INSERT INTO shop (shop_name, floor_no, owner_id) VALUES
+('Ali Electronics', 1, 10),
+('Sara Fashion', 2, 11),
+('Usman Books', 3, 12);
+
+INSERT INTO customer (customer_name, email, phone) VALUES
+('Ahmad Malik', 'ahmad.malik@gmail.com', '03112223333'),
+('Fatima Noor', 'fatima.noor@gmail.com', '03114445555');
+
+INSERT INTO product (product_name, price, shop_id) VALUES
+('Samsung TV', 85000, 10),
+('Laptop Dell', 120000, 10),
+('Men Jacket', 5500, 11);
+
+INSERT INTO inventory (product_id, quantity) SELECT product_id, 50 FROM product;
+
+INSERT INTO orders (customer_id, order_date, total_amount) VALUES (10, CURDATE(), 205000);
+INSERT INTO order_item (order_id, product_id, quantity, price) VALUES (1, 20, 1, 85000), (1, 21, 1, 120000);
+
+INSERT INTO employee (emp_name, designation, salary) VALUES ('Zaid Ahmed', 'Mall Manager', 85000.00);
+INSERT INTO supplier (sup_name, contact) VALUES ('Lahore Electronics', '0321-1112223');
+INSERT INTO category (cat_name) VALUES ('Electronics');
+
+TRUNCATE TABLE feedback;
+INSERT INTO feedback (customer_id, comments, rating) VALUES 
+(10, 'Excellent service at Ali Electronics. Highly recommended!', 5),
+(11, 'Sara Fashion collection is great but prices are high.', 4),
+(12, 'Usman Books has every book I was looking for. Very helpful staff.', 5),
+(10, 'The mall environment is very clean and secure.', 5),
+(11, 'Waiting time at the billing counter was a bit long.', 3),
+(10, 'jade jewelers is so overwhelming', 5);
+
+SET FOREIGN_KEY_CHECKS = 1;
