@@ -35,8 +35,9 @@ This system provides a centralized dashboard for mall administrators to manage a
 | IDE               | IntelliJ IDEA                  |
 
 
-📁 Project Structure
+## 📁 Project Structure
 
+```
 DATABASE/
 ├── src/
 │   ├── dao/            # Data Access Objects (ShopDAO, UserDAO, etc.)
@@ -48,6 +49,7 @@ DATABASE/
 │   └── TestConnection.java  # Standalone DB connectivity test
 ├── DATABASE.iml
 └── README.md
+```
 
 
 ⚙️ Setup & Installation
